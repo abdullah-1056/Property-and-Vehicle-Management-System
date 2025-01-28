@@ -21,15 +21,15 @@ The Property and Vehicle Management System is a comprehensive application design
 
 3.User Roles:
 
- >Owner:
+ •Owner:
 
-  •	Manage all properties and vehicles.
-  •	Access full reporting and analytics tools.
+  >	Manage all properties and vehicles.
+  >	Access full reporting and analytics tools.
 
- >Customer:
+  •Customer:
 
-   • ThisView assigned properties and vehicles.
-   • Submit requests or updates for specific records.
+   > ThisView assigned properties and vehicles.
+   > Submit requests or updates for specific records.
 
 4.Reporting and Analytics:
 
