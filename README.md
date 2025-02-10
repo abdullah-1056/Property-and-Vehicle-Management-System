@@ -38,6 +38,7 @@ The Property and Vehicle Management System is a comprehensive application design
 
 
 #Technologies Used
-    • Frontend: HTML, CSS
-    • Backend: PHP
-    • Database: [e.g., MySQL]
+
+   • Frontend: HTML, CSS
+   • Backend: PHP
+   • Database: [e.g., MySQL]
