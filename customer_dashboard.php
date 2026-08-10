@@ -31,14 +31,18 @@ $reserved_vehicles_sql = "SELECT vehicle.* FROM vehicle
                           WHERE reservation.cust_id = $cust_id";
 $reserved_vehicles_result = mysqli_query($conn, $reserved_vehicles_sql);
 
-// Fetch available properties based on type
+// Fetch available properties based on type (properties not currently reserved)
 $property_type = isset($_GET['property_type']) ? $_GET['property_type'] : 'house';
-$available_properties_sql = "SELECT * FROM property WHERE status='available' AND type='$property_type'";
+$available_properties_sql = "SELECT * FROM property 
+                             WHERE type='$property_type' 
+                             AND property_id NOT IN (SELECT property_id FROM reservation WHERE property_id IS NOT NULL)";
 $available_properties_result = mysqli_query($conn, $available_properties_sql);
 
-// Fetch available vehicles based on type
+// Fetch available vehicles based on type (vehicles not currently reserved)
 $vehicle_type = isset($_GET['vehicle_type']) ? $_GET['vehicle_type'] : 'car';
-$available_vehicles_sql = "SELECT * FROM vehicle WHERE status='available' AND category='$vehicle_type'";
+$available_vehicles_sql = "SELECT * FROM vehicle 
+                           WHERE category='$vehicle_type' 
+                           AND vehicle_id NOT IN (SELECT vehicle_id FROM reservation WHERE vehicle_id IS NOT NULL)";
 $available_vehicles_result = mysqli_query($conn, $available_vehicles_sql);
 
 // Get query parameters for reservation form

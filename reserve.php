@@ -10,31 +10,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Fetch owner_id based on item_type and item_id
     if ($item_type == 'property') {
-        $owner_sql = "SELECT owner_id FROM property WHERE property_id='$item_id' AND status='available'";
+        $owner_sql = "SELECT owner_id FROM property WHERE property_id='$item_id'";
     } else if ($item_type == 'vehicle') {
-        $owner_sql = "SELECT owner_id FROM vehicle WHERE vehicle_id='$item_id' AND status='available'";
+        $owner_sql = "SELECT owner_id FROM vehicle WHERE vehicle_id='$item_id'";
     }
     $owner_result = mysqli_query($conn, $owner_sql);
     if (mysqli_num_rows($owner_result) > 0) {
         $owner = mysqli_fetch_assoc($owner_result);
         $owner_id = $owner['owner_id'];
 
+        // Check if item is already reserved
         if ($item_type == 'property') {
-            $sql = "INSERT INTO reservation (cust_id, property_id, rent_date, owner_id, transaction_id) VALUES ('$customer_id', '$item_id', '$rent_date', '$owner_id', 1)";
-            $update_sql = "UPDATE property SET status='reserved' WHERE property_id='$item_id'";
+            $check_sql = "SELECT COUNT(*) as count FROM reservation WHERE property_id='$item_id'";
         } else if ($item_type == 'vehicle') {
-            $sql = "INSERT INTO reservation (cust_id, vehicle_id, rent_date, owner_id, transaction_id) VALUES ('$customer_id', '$item_id', '$rent_date', '$owner_id', 1)";
-            $update_sql = "UPDATE vehicle SET status='reserved' WHERE vehicle_id='$item_id'";
+            $check_sql = "SELECT COUNT(*) as count FROM reservation WHERE vehicle_id='$item_id'";
         }
+        $check_result = mysqli_query($conn, $check_sql);
+        $check_row = mysqli_fetch_assoc($check_result);
 
-        if (mysqli_query($conn, $sql) && mysqli_query($conn, $update_sql)) {
+        if ($check_row['count'] > 0) {
             echo '<script>
-                     alert("Reservation successful!");
+                     alert("Item is already reserved.");
                      window.location.href="customer_dashboard.php";
                   </script>';
+            exit();
+        }
+
+        // Get rent amount
+        if ($item_type == 'property') {
+            $rent_sql = "SELECT rent FROM property WHERE property_id='$item_id'";
+        } else {
+            $rent_sql = "SELECT rent FROM vehicle WHERE vehicle_id='$item_id'";
+        }
+        $rent_result = mysqli_query($conn, $rent_sql);
+        $rent_row = mysqli_fetch_assoc($rent_result);
+        $bill = $rent_row['rent'];
+
+        // Insert transaction first
+        $trans_sql = "INSERT INTO transaction (date, payment_method, bill) VALUES ('$rent_date', 'cash', '$bill')";
+        if (mysqli_query($conn, $trans_sql)) {
+            $transaction_id = mysqli_insert_id($conn);
+
+            // Insert reservation
+            if ($item_type == 'property') {
+                $sql = "INSERT INTO reservation (cust_id, property_id, rent_date, bill, owner_id, transaction_id) VALUES ('$customer_id', '$item_id', '$rent_date', '$bill', '$owner_id', '$transaction_id')";
+            } else if ($item_type == 'vehicle') {
+                $sql = "INSERT INTO reservation (cust_id, vehicle_id, rent_date, bill, owner_id, transaction_id) VALUES ('$customer_id', '$item_id', '$rent_date', '$bill', '$owner_id', '$transaction_id')";
+            }
+
+            if (mysqli_query($conn, $sql)) {
+                echo '<script>
+                         alert("Reservation successful!");
+                         window.location.href="customer_dashboard.php";
+                      </script>';
+            } else {
+                echo '<script>
+                         alert("Reservation failed. Please try again.");
+                         window.location.href="customer_dashboard.php";
+                      </script>';
+            }
         } else {
             echo '<script>
-                     alert("Reservation failed. Please try again.");
+                     alert("Transaction failed. Please try again.");
                      window.location.href="customer_dashboard.php";
                   </script>';
         }
